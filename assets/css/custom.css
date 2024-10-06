@@ -1,0 +1,231 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: #333;
+  text-decoration: none;
+}
+
+.landing-page {
+  background-image: url("../pictures/sample.jpg");
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
+  position: relative;
+}
+
+.resources-page {
+  background-image: url("../pictures/RESOURCES.JPG");
+  background-size: cover;
+  background-position: center;
+  height: 60vh;
+  position: relative;
+}
+
+.how-page {
+  background-image: url("../pictures/how-it-works.jpg");
+  background-size: cover;
+  background-position: center;
+  height: 40vh;
+  position: relative;
+}
+
+.overlay {
+  background: rgba(0, 0, 0, 0.5); /* Add a dark overlay for text readability */
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #ffffff;
+  text-align: center;
+}
+
+.landing-page h1,
+.landing-page p {
+  color: #ffffff;
+}
+
+.landing-page .btn-primary {
+  background-color: #003366;
+  border-color: #003366;
+}
+
+.landing-page .btn-primary:hover {
+  background-color: #33cc33;
+  border-color: #33cc33;
+}
+
+.carousel-item {
+  height: 400px; /* Adjust the height as per your design */
+}
+.carousel-item img {
+  object-fit: cover;
+  height: 100%;
+  width: 100%;
+}
+
+/* Custom styles for the navbar */
+.navbar {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-nav .nav-item .nav-link {
+  color: #003366; /* Dark blue text color */
+  font-weight: 500;
+}
+
+.navbar-nav .nav-item .nav-link:hover,
+.navbar-nav .nav-item .nav-link:active {
+  color: #33cc33; /* Green color for hover and active states */
+}
+
+.dropdown-menu {
+  background-color: #ffffff;
+}
+
+.dropdown-item {
+  color: #003366;
+}
+
+.dropdown-item:hover {
+  background-color: #33cc33;
+  color: #ffffff;
+}
+
+/* Custom styles for the profile modal */
+.modal-content {
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  border-bottom: 1px solid #e9ecef;
+}
+
+.modal-title {
+  color: #003366;
+}
+
+.btn-primary {
+  background-color: #003366;
+  border-color: #003366;
+}
+
+.btn-primary:hover {
+  background-color: #33cc33;
+  border-color: #33cc33;
+}
+
+.weather-container {
+  padding: 3rem 1rem 2rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.starter-template {
+  padding: 3rem 1rem;
+  background-color: white;
+  border-radius: 10px; /* Add some rounded corners for style */
+  margin: 2rem auto; /* Center the form */
+  max-width: 450px; /* Limit the width of the form */
+}
+
+.error-message {
+  color: red;
+}
+.success-message {
+  color: green;
+}
+
+#chartContainer {
+  width: 100%; /* Adjust width as needed */
+  max-width: 500px; /* Maximum width to control responsiveness */
+  height: 250px; /* Adjust height as needed */
+}
+
+svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: block;
+  background-color: #0e4166;
+  background-image: linear-gradient(
+    to bottom,
+    rgba(14, 65, 102, 0.86),
+    #0e4166
+  );
+}
+
+.chart-container {
+  position: relative;
+  height: 300px; /* Adjust this value as needed */
+  width: 100%;
+}
+.chart-description {
+  color: white;
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #003366;
+  border-radius: 5px;
+  font-size: 14px;
+  overflow-y: auto;
+  max-height: 150px; /* Adjust this value as needed */
+}
+@media (max-width: 767px) {
+  .chart-container {
+    height: 250px; /* Smaller height for mobile screens */
+  }
+  .chart-description {
+    max-height: none; /* Remove max-height for mobile */
+  }
+}
+
+.btn-link {
+  color: #333;
+  padding: 0;
+  margin: 0 5px;
+}
+
+.btn-link:hover {
+  color: #007bff;
+}
+
+.delete-btn:hover {
+  color: #dc3545;
+}
+
+#green-link {
+  color: black;
+}
+
+#green-link:hover {
+  color: #33cc33;
+  text-decoration: none;
+}
+
+#black-link {
+  color: black;
+  text-decoration: none;
+}
+
+.team-member-img {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+@media (max-width: 767.98px) {
+  .team-member-img {
+    width: 150px;
+    height: 150px;
+  }
+}
+@media (max-width: 575.98px) {
+  .team-member-img {
+    width: 140px;
+    height: 140px;
+  }
+}

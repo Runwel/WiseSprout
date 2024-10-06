@@ -1,0 +1,67 @@
+.sidebar {
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding-top: 20px;
+  width: 250px;
+  background-color: #343a40;
+  transition: transform 0.3s ease;
+  z-index: 1;
+}
+.sidebar .nav-link {
+  color: #fff;
+}
+.sidebar .nav-link:hover {
+  background-color: #495057;
+}
+
+.content {
+  margin-left: 251px; /* Adjust according to your sidebar width */
+  padding: 20px; /* Optional padding to separate content from sidebar */
+  transition: margin-left 0.3s ease;
+}
+/* Hide sidebar on smaller screens */
+@media (max-width: 767.98px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.show {
+    transform: translateX(0);
+  }
+  .close-btn {
+    display: block;
+  }
+  #sidebarToggle {
+    display: block;
+  }
+  .content {
+    margin-left: 0;
+  }
+}
+/* Display sidebar toggle button only on medium screens */
+@media (min-width: 768px) {
+  #sidebarToggle {
+    display: none;
+  }
+}
+.close-btn {
+  display: none;
+  text-align: right;
+  padding-right: 10px;
+}
+.username-section {
+  padding: 10px 20px;
+  background-color: #343a40;
+  color: #fff;
+  text-align: center;
+}
+
+#image-preview {
+  width: 100%; /* Adjust width as needed */
+  height: 350px; /* Adjust height as needed */
+  padding: 3rem;
+  border: 1px solid #ccc;
+  text-align: center; /* Center the image */
+  overflow: hidden; /* Hide overflow to contain large images */
+}
