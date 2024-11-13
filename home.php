@@ -40,6 +40,7 @@ ob_end_flush();
                     <h3>Current Weather   </h3><span id="weather-icon" style="margin: -5px 0 0 5px;"></span>
                 </div>
                 <h5 id="city-name">City: Loading...</h5>
+                <h5 id="condition">Condition: Loading...</h5>
             </div>
             <div class="col-md-6">
                 <h3>Weather API Data:</h3>
@@ -48,19 +49,19 @@ ob_end_flush();
             </div>
         </div>
         <div class="col-md-3">
-        <div class="sensor-data">
-            <h4>Soil Humidity Sensor</h4>
-            <p>Current Soil Humidity: <span id="soil-humidity">70%</span></p>
-            <p>Soil is adequately moist.</p>
+            <div class="sensor-data">
+                <h4>Soil Humidity Sensor</h4>
+                <p>Current Soil Humidity: <span id="soil-humidity">Loading...</span></p>
+                <p>Condition: <span id="soil-condition">Loading...</span></p>
+            </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="sensor-data">
-            <h4>Water Level Sensor</h4>
-            <p>Current Water Level: <span id="water-level">30%</span></p>
-            <p>Water level is low. Refill water tank.</p>
+        <div class="col-md-3">
+            <div class="status-data">
+                <h4>Arduino Uno R4 / Device Status</h4>
+                <p>Status: <span id="device-status">Loading...</span></p>
+                <p id="last-updated">Last Updated: Loading...</p>
+            </div>
         </div>
-    </div>
     </div>
     <section class="row my-5">
         <div class="col-md-6 mb-4">
@@ -79,7 +80,8 @@ ob_end_flush();
     <div class="control-panel row">
         
         <div class="col-md-8 text-white">
-            <h2 class="text-center">Your Schedules:</h2>
+            <h2 class="text-center">Schedules:</h2>
+            <p class="text-center">M-Monday / T-Tuesday / W-Wednesday / TH-Thursday / F-Friday / S-Saturday / SU-Sunday</p>
             <div>
                 <table class="table table-striped table-bordered text-white">
                 <thead>
@@ -110,6 +112,8 @@ ob_end_flush();
                             <div class="form-group">
                                 <label for="add-duration">Duration:</label>
                                 <select class="form-control" id="add-duration" name="duration" required>
+                                    <option value="180">3 minutes</option>
+                                    <option value="300">5 minutes</option>
                                     <option value="600">10 minutes</option>
                                     <option value="1200">20 minutes</option>
                                     <option value="1800">30 minutes</option>
@@ -172,6 +176,8 @@ ob_end_flush();
                             <div class="form-group">
                                 <label for="edit-duration">Duration:</label>
                                 <select class="form-control" id="edit-duration" name="duration" required>
+                                    <option value="180">3 minutes</option>
+                                    <option value="300">5 minutes</option>
                                     <option value="600">10 minutes</option>
                                     <option value="1200">20 minutes</option>
                                     <option value="1800">30 minutes</option>
@@ -264,27 +270,27 @@ ob_end_flush();
 
     // Delete button click handler
     $(document).on('click', '.delete-btn', function() {
-    if (confirm('Are you sure you want to delete this schedule?')) {
-        var scheduleId = $(this).data('id');
+        if (confirm('Are you sure you want to delete this schedule?')) {
+            var scheduleId = $(this).data('id');
 
-        fetch(`includes/delete_schedule.php?id=${scheduleId}`, {
-            method: 'GET'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                refreshTable(); // Assuming this function refreshes your schedule table
-            }
-            $('#responseMessage').text(data.message);
-            $('#responseModal').modal('show');
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            $('#responseMessage').text('An error occurred while deleting the schedule.');
-            $('#responseModal').modal('show');
-        });
-    }
-});
+            fetch(`includes/delete_schedule.php?id=${scheduleId}`, {
+                method: 'GET'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+                $('#responseMessage').text(data.message);
+                $('#responseModal').modal('show');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                $('#responseMessage').text('An error occurred while deleting the schedule.');
+                $('#responseModal').modal('show');
+            });
+        }
+    });
 
     // Form submit handler
     function handleFormSubmit(formId, url) {
@@ -324,8 +330,7 @@ ob_end_flush();
 
                 // If the update was successful, refresh the table
                 if (data.success) {
-                    refreshTable();
-                    updateScheduleStatus();
+                    location.reload();
                 }
             })
             .catch(error => {
@@ -346,151 +351,160 @@ ob_end_flush();
                 document.getElementById('schedule-table').innerHTML = data;
             });
     }
+    refreshTable();
+    setInterval(refreshTable, 5000);
 
+    // Function to update the status of a schedule
     function updateStatus(scheduleId, newStatus) {
-    fetch('includes/update_status.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id: scheduleId, status: newStatus })
-    }).then(response => response.json())
-      .then(data => {
-        //   console.log(`Update status response for schedule ${scheduleId}:`, data);
-      });
-}
-
-function updateScheduleStatus() {
-    fetch('includes/fetch_schedules.php')
-        .then(response => response.json())
+        fetch('includes/update_status.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: scheduleId, status: newStatus })
+        }).then(response => response.json())
         .then(data => {
-            if (data.success) {
-                var current_time = new Date(); // Current time
-                // console.log(`Current time: ${current_time}`);
-                if (Array.isArray(data.schedules) && data.schedules.length > 0) {
-                    // Clear existing table rows
-                    $('#schedule-table tbody').empty();
-
-                    // Iterate over schedules
-                    data.schedules.forEach(function(schedule) {
-                        updateSchedule(schedule, current_time);
-                    });
-                } else if (!Array.isArray(data.schedules) && typeof data.schedules === 'object') {
-                    // Handle case where data.schedules is a single object
-                    updateSchedule(data.schedules, current_time);
-                } else {
-                    $('#schedule-table tbody').empty(); // Clear table rows
-                }
-            } else {
-                $('#schedule-table tbody').empty(); // Clear table rows
-            }
+            // Handle any actions if needed after updating status
+            // console.log(`Updated status for schedule ${scheduleId}:`, data);
         })
         .catch(error => {
-            // console.error('Error fetching schedules:', error);
-            $('#schedule-table tbody').empty(); // Clear table rows
+            console.error('Error updating status:', error);
         });
-}
-
-function updateSchedule(schedule, current_time) {
-    if (!schedule || !schedule.start_time || !schedule.duration || !schedule.days || !schedule.status) {
-        // console.error('Invalid schedule object:', schedule);
-        return;
     }
 
-    // Convert start_time and calculate end_time as Date objects for comparison
-    var start_time_parts = schedule.start_time.split(':');
-    var start_time = new Date();
-    start_time.setHours(start_time_parts[0]);
-    start_time.setMinutes(start_time_parts[1]);
-    start_time.setSeconds(start_time_parts[2]);
+    // Function to check and update schedule statuses
+    function updateScheduleStatus() {
+        fetch('includes/fetch_status.php')  // Fetch schedules
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    var current_time = new Date();  // Get current time
 
-    var end_time = new Date(start_time);
-    end_time.setSeconds(end_time.getSeconds() + schedule.duration); // Add duration to start_time
-
-    // Determine current day start and end times
-    var currentDayStart = new Date();
-    currentDayStart.setHours(0, 0, 0, 0); // Start of current day
-    var currentDayEnd = new Date(currentDayStart);
-    currentDayEnd.setHours(23, 59, 59, 999); // End of current day
-
-    // Convert the day to match the current day of the week
-    var daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    var currentDay = daysOfWeek[current_time.getDay()];
-
-    // Split the schedule days into an array and check if the current day matches any of the specified days
-    var scheduleDays = schedule.days.split(',');
-    var isTodayScheduled = scheduleDays.includes(currentDay);
-
-    // console.log(`Schedule ID: ${schedule.id}`);
-    // console.log(`Schedule days: ${schedule.days}`);
-    // console.log(`Is today scheduled? ${isTodayScheduled}`);
-    // console.log(`Current time: ${current_time}`);
-    // console.log(`Start time: ${start_time}`);
-    // console.log(`End time: ${end_time}`);
-    // console.log(`Current day: ${currentDay}`);
-
-    if (isTodayScheduled) {
-        var statusToUpdate = '';
-
-        if (current_time >= start_time && current_time <= end_time) {
-            statusToUpdate = 'Ongoing';
-        } else if (current_time > end_time && schedule.status !== 'Ended' && current_time <= currentDayEnd) {
-            statusToUpdate = 'Ended';
-        } else if (current_time > currentDayEnd && schedule.status !== 'Pending') {
-            statusToUpdate = 'Pending';
-        } else {
-            statusToUpdate = schedule.status;
-        }
-
-        // If schedule is Ended and it's past its end time, reset it to Pending at midnight
-        if (statusToUpdate === 'Ended' && current_time > end_time && current_time >= currentDayEnd) {
-            statusToUpdate = 'Pending';
-        }
-
-        // console.log(`Status to update: ${statusToUpdate}`);
-        if (statusToUpdate !== schedule.status) {
-            updateStatus(schedule.id, statusToUpdate);
-        }
-    } else {
-        // If today is not a scheduled day, set the status to Pending
-        // console.log(`Today is not a scheduled day. Setting status to Pending.`);
-        updateStatus(schedule.id, 'Pending');
+                    if (Array.isArray(data.schedules) && data.schedules.length > 0) {
+                        // Iterate over each schedule and update status
+                        data.schedules.forEach(function(schedule) {
+                            updateSchedule(schedule, current_time);
+                        });
+                    } else if (!Array.isArray(data.schedules) && typeof data.schedules === 'object') {
+                        // Handle case where there's a single schedule object
+                        updateSchedule(data.schedules, current_time);
+                    }
+                } else {
+                    console.error('Failed to fetch schedules');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching schedules:', error);
+            });
     }
-}
 
-// Call updateScheduleStatus to start the process
+    // Function to update status for each individual schedule
+    function updateSchedule(schedule, current_time) {
+        if (!schedule || !schedule.start_time || !schedule.duration || !schedule.days || !schedule.status) {
+            return;  // If schedule data is invalid, skip it
+        }
+
+        // Convert start_time and calculate end_time as Date objects for comparison
+        var start_time_parts = schedule.start_time.split(':');
+        var start_time = new Date();
+        start_time.setHours(start_time_parts[0]);
+        start_time.setMinutes(start_time_parts[1]);
+        start_time.setSeconds(start_time_parts[2]);
+
+        var end_time = new Date(start_time);
+        end_time.setSeconds(end_time.getSeconds() + schedule.duration);  // Add duration to start time
+
+        // Current day details
+        var currentDayStart = new Date();
+        currentDayStart.setHours(0, 0, 0, 0);  // Start of current day
+        var currentDayEnd = new Date(currentDayStart);
+        currentDayEnd.setHours(23, 59, 59, 999);  // End of current day
+
+        var daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        var currentDay = daysOfWeek[current_time.getDay()];
+
+        // Split the schedule days and check if today is scheduled
+        var scheduleDays = schedule.days.split(',');
+        var isTodayScheduled = scheduleDays.includes(currentDay);
+
+        if (isTodayScheduled) {
+            var statusToUpdate = '';
+
+            if (current_time >= start_time && current_time <= end_time) {
+                // If the current time is within the schedule's start and end time, mark as Loading
+                if (schedule.status !== 'Ongoing') {
+                    statusToUpdate = 'Loading....';
+                }
+            } else if (current_time > end_time && schedule.status === 'Loading....') {
+                // If the schedule has passed its end time and is still Loading, change to Device Connected
+                statusToUpdate = 'Device Disconnected';
+            }
+
+            // Update status if it has changed
+            if (statusToUpdate && statusToUpdate !== schedule.status) {
+                updateStatus(schedule.id, statusToUpdate);
+            }
+        }
+    }
+    // Call the function to start updating the schedule statuses
     updateScheduleStatus();
-    refreshTable();
-    updateSchedule();
-    setInterval(refreshTable, 5000);
     setInterval(updateScheduleStatus, 5000);
 
     // Weather API fetch
     fetch('api/weather.php')
-        .then(response => response.json())
-        .then(data => {
-            const todayWeather = data.data[0];
-            const temperature = todayWeather.temp;
-            const humidity = todayWeather.rh;
-            const city = todayWeather.city_name;
-            const clouds = todayWeather.clouds;
-            const precipitation = todayWeather.precip;
+    .then(response => response.json())
+    .then(data => {
+        // Check if there's an error in the response
+        if (data.error) {
+            console.error('Error:', data.error);
+            return;
+        }
 
-            document.getElementById('city-name').innerText = `City: ${city}`;
-            document.getElementById('temperature').innerText = `Temperature: ${temperature} °C`;
-            document.getElementById('humidity').innerText = `Humidity: ${humidity}%`;
+        // Extract weather data from the response
+        const location = data.location;
+        const currentWeather = data.current;
 
-            let iconClass = '';
-            if (precipitation > 0) {
-                iconClass = 'fa-cloud-showers-heavy text-dark';
-            } else if (clouds > 50) {
-                iconClass = 'fa-cloud text-primary';
-            } else {
-                iconClass = 'fa-sun text-warning';
-            }
-            setWeatherIcon(iconClass);
-        })
-        .catch(error => console.error('Error fetching weather data:', error));
+        const city = location.name;  // City name
+        const temperature = currentWeather.temp_c;  // Temperature in Celsius
+        const humidity = currentWeather.humidity;
+        const conditionText = currentWeather.condition.text;  // Condition text like "Partly cloudy"
+        const iconUrl = `https:${currentWeather.condition.icon}`;  // Weather icon URL
+
+        // Update the HTML with weather information
+        document.getElementById('city-name').innerText = `City: ${city}`;
+        document.getElementById('temperature').innerText = `Temperature: ${temperature} °C`;
+        document.getElementById('humidity').innerText = `Humidity: ${humidity}%`;
+        document.getElementById('condition').innerText = `Condition: ${conditionText}`;
+
+        // Determine the correct FontAwesome icon class based on weather condition
+        let iconClass = '';
+        switch (conditionText.toLowerCase()) {
+            case 'clear':
+            case 'sunny':
+            case 'mostly clear':
+                iconClass = 'fa-sun text-warning'; // Sun icon for clear/sunny weather
+                break;
+            case 'partly cloudy':
+                iconClass = 'fa-solid fa-cloud-sun text-primary'; // Partly cloudy
+                break;
+            case 'cloudy':
+                iconClass = 'fa-cloud text-dark'; // Cloudy weather
+                break;
+            case 'rainy':
+            case 'showers':
+                iconClass = 'fa-cloud-showers-heavy text-info'; // Rainy weather
+                break;
+            case 'snow':
+                iconClass = 'fa-snowflake text-light'; // Snowy weather
+                break;
+            default:
+                iconClass = 'fa-question-circle text-muted'; // Default icon for unknown conditions
+        }
+
+        // Set the FontAwesome icon class
+        setWeatherIcon(iconClass);
+    })
+    .catch(error => console.error('Error fetching weather data:', error));
 
     function setWeatherIcon(iconClass) {
         const weatherIconDiv = document.getElementById('weather-icon');
@@ -500,7 +514,6 @@ function updateSchedule(schedule, current_time) {
     // Soil sensor chart
     var ctx = document.getElementById('soilMoistureChart').getContext('2d');
     var soilMoistureData = [65, 68, 70, 72, 69, 75]; // Data for Monday to Saturday
-
     var myChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -553,9 +566,7 @@ function updateSchedule(schedule, current_time) {
             }
         }
     });
-
     document.getElementById('soilMoistureDescription').innerHTML = interpretSoilMoisture(soilMoistureData);
-
 
     function interpretSoilMoisture(data) {
         let trend = data[data.length - 1] > data[0] ? "increasing" : "decreasing";
@@ -565,119 +576,205 @@ function updateSchedule(schedule, current_time) {
     }
 
     // Schedule Comparison Chart
-    var ctx3 = document.getElementById('scheduleComparisonChart').getContext('2d');
-    var scheduleComparisonData = [
-        { day: 'Monday', schedules: [{ time: '06:00', duration: 10 }, { time: '18:00', duration: 20 }] },
-        { day: 'Tuesday', schedules: [{ time: '07:00', duration: 20 }, { time: '19:00', duration: 10 }] },
-        { day: 'Wednesday', schedules: [{ time: '06:30', duration: 10 }, { time: '12:00', duration: 10 }, { time: '18:30', duration: 10 }] },
-        { day: 'Thursday', schedules: [{ time: '07:00', duration: 30 }] },
-        { day: 'Friday', schedules: [{ time: '06:00', duration: 20 }, { time: '18:00', duration: 20 }] },
-        { day: 'Saturday', schedules: [{ time: '08:00', duration: 30 }, { time: '16:00', duration: 10 }] },
-        { day: 'Sunday', schedules: [{ time: '07:00', duration: 20 }, { time: '19:00', duration: 20 }] }
-    ];
+    function createScheduleComparisonChart() {
+        var ctx3 = document.getElementById('scheduleComparisonChart').getContext('2d');
 
-    var scheduleComparisonChart = new Chart(ctx3, {
-        type: 'bar',
-        data: {
-            labels: scheduleComparisonData.map(item => item.day),
-            datasets: scheduleComparisonData[0].schedules.map((_, index) => ({
-                label: `Watering ${index + 1}`,
-                data: scheduleComparisonData.map(day => day.schedules[index] ? day.schedules[index].duration : 0),
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.5)',
-                    'rgba(54, 162, 235, 0.5)',
-                    'rgba(255, 206, 86, 0.5)',
-                ][index],
-                borderColor: [
-                    'rgb(255, 99, 132)',
-                    'rgb(54, 162, 235)',
-                    'rgb(255, 206, 86)',
-                ][index],
-                borderWidth: 1
-            }))
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    stacked: true,
-                    color: 'white', // X-axis label color
-                    ticks: {
-                        color: 'white' // X-axis tick color
+        // Fetch schedule data from PHP endpoint
+        fetch('includes/fetch_schedules.php')
+            .then(response => response.json())  // Parse the JSON response
+            .then(data => {
+                // Prepare the data for the chart
+                const scheduleComparisonData = prepareScheduleData(data);
+
+                // Create the chart with the fetched data
+                var scheduleComparisonChart = new Chart(ctx3, {
+                    type: 'bar',
+                    data: {
+                        labels: scheduleComparisonData.labels,
+                        datasets: scheduleComparisonData.datasets
                     },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.2)' // X-axis grid lines color
-                    }
-                },
-                y: {
-                    stacked: true,
-                    beginAtZero: true,
-                    max: 60,  // Increased to accommodate stacked bars
-                    ticks: {
-                        stepSize: 10,
-                        color: 'white' // Y-axis tick color
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.2)' // Y-axis grid lines color
-                    }
-                }
-            },
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Weekly Watering Schedule',
-                    color: 'white' // Title text color
-                },
-                legend: {
-                    labels: {
-                        color: 'white' // Legend text color
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                stacked: true,
+                                color: 'white',
+                                ticks: {
+                                    color: 'white'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.2)'
+                                }
+                            },
+                            y: {
+                                stacked: true,
+                                beginAtZero: true,
+                                max: 60,
+                                ticks: {
+                                    stepSize: 10,
+                                    color: 'white'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.2)'
+                                }
                             }
-                            if (context.parsed.y !== null) {
-                                label += context.parsed.y + ' minutes';
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Weekly Watering Schedule',
+                                color: 'white'
+                            },
+                            legend: {
+                                labels: {
+                                    color: 'white'
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) label += ': ';
+                                        if (context.parsed.y !== null) label += context.parsed.y + ' minutes';
+                                        let dayData = scheduleComparisonData.rawData[context.dataIndex];
+                                        let scheduleData = dayData.schedules[context.datasetIndex];
+                                        if (scheduleData) label += ` (${scheduleData.time})`;
+                                        return label;
+                                    }
+                                }
                             }
-                            let dayData = scheduleComparisonData[context.dataIndex];
-                            let scheduleData = dayData.schedules[context.datasetIndex];
-                            if (scheduleData) {
-                                label += ` (${scheduleData.time})`;
-                            }
-                            return label;
                         }
                     }
+                });
+
+                // Display the description
+                document.getElementById('scheduleComparisonDescription').innerHTML = interpretScheduleComparison(scheduleComparisonData.rawData);
+
+            })
+            .catch(error => console.error('Error fetching schedule data:', error));
+
+        // Function to prepare the schedule data for charting
+        function prepareScheduleData(data) {
+            const dayOrder = ['M', 'T', 'W', 'TH', 'F', 'S', 'SU'];  // Days in correct order
+            const labels = [];
+            const datasets = [];
+            const maxSchedules = Math.max(...Object.values(data).map(day => day.length)); // Get the maximum number of schedules for any day
+            const rawData = [];
+
+            // Loop through the dayOrder to structure data based on M, T, W, etc.
+            dayOrder.forEach(day => {
+                labels.push(day); // Set day as label in correct order
+                const schedules = data[day] || [];  // If no data for the day, default to empty array
+                rawData.push({ day: day, schedules: schedules });
+
+                // Create datasets for each watering time
+                for (let i = 0; i < maxSchedules; i++) {
+                    if (!datasets[i]) {
+                        datasets[i] = {
+                            label: `Watering ${i + 1}`,
+                            data: [],
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.5)',
+                                'rgba(54, 162, 235, 0.5)',
+                                'rgba(255, 206, 86, 0.5)',
+                            ][i % 3],
+                            borderColor: [
+                                'rgb(255, 99, 132)',
+                                'rgb(54, 162, 235)',
+                                'rgb(255, 206, 86)',
+                            ][i % 3],
+                            borderWidth: 1
+                        };
+                    }
+                    // Convert duration from seconds to minutes
+                    datasets[i].data.push(schedules[i] ? (schedules[i].duration / 60) : 0); // Duration is in minutes
                 }
+            });
+
+            return { labels, datasets, rawData };
+        }
+
+        // Function to generate schedule comparison interpretation
+        function interpretScheduleComparison(data) {
+            // Convert all durations to minutes for proper calculation and display
+            let totalDurationInMinutes = 0;
+            let dayCount = 0;
+
+            // To store the total duration per day for calculating the highest and lowest
+            let maxDay = { day: '', total: 0 };
+            let minDay = { day: '', total: Infinity };
+
+            // Loop through the data to calculate the total duration, and track max and min
+            data.forEach(day => {
+                // Only process days that have watering schedules
+                if (day.schedules.length > 0) {
+                    let dayTotalInMinutes = day.schedules.reduce((sum, schedule) => sum + (schedule.duration / 60), 0); // convert to minutes
+                    totalDurationInMinutes += dayTotalInMinutes;
+                    dayCount++;
+
+                    if (dayTotalInMinutes > maxDay.total) {
+                        maxDay = { day: day.day, total: dayTotalInMinutes };
+                    }
+
+                    if (dayTotalInMinutes < minDay.total) {
+                        minDay = { day: day.day, total: dayTotalInMinutes };
+                    }
+                }
+            });
+
+            // If no schedules were found, return a default message
+            if (dayCount === 0) {
+                return "No watering schedules found for the selected days.";
             }
+
+            // Calculate average watering duration
+            let avgDuration = (totalDurationInMinutes / dayCount).toFixed(1);  // avg calculated on actual days with watering
+
+            // Build the description message with the updated values
+            return `Avg daily watering: ${avgDuration} min. Highest: ${maxDay.day} (${maxDay.total} min). 
+                    Lowest: ${minDay.day} (${minDay.total} min). 
+                    ${totalDurationInMinutes > 120 ? "Consider reducing overall watering time." : "Schedule seems efficient."}`;
         }
+    }
+
+    // Call the function to create the chart when the page loads
+    createScheduleComparisonChart();
     });
 
-    document.getElementById('scheduleComparisonDescription').innerHTML = interpretScheduleComparison(scheduleComparisonData);
+    function fetchSoilData() {
+        const userId = <?php echo json_encode($user_id); ?>;
+        fetch('latest-data.php?user_id=' + userId)
+            .then(response => response.json())
+            .then(data => {
+                // Update soil data
+                document.getElementById('soil-humidity').innerText = data.moisture + "%";
+                document.getElementById('soil-condition').innerText = data.condition;
 
+                // Get the current time and the last updated timestamp from the response
+                const currentTime = new Date();
+                const lastUpdatedTime = new Date(data.timestamp);
 
-    function interpretScheduleComparison(data) {
-        let totalDuration = data.reduce((sum, day) => sum + day.schedules.reduce((daySum, schedule) => daySum + schedule.duration, 0), 0);
-        let avgDuration = (totalDuration / 7).toFixed(1);
-        let maxDay = data.reduce((max, day) => {
-            let dayTotal = day.schedules.reduce((sum, schedule) => sum + schedule.duration, 0);
-            return dayTotal > max.total ? { day: day.day, total: dayTotal } : max;
-        }, { day: '', total: 0 });
-        let minDay = data.reduce((min, day) => {
-            let dayTotal = day.schedules.reduce((sum, schedule) => sum + schedule.duration, 0);
-            return dayTotal < min.total ? { day: day.day, total: dayTotal } : min;
-        }, { day: '', total: Infinity });
-        
-        return `Avg daily watering: ${avgDuration} min. Highest: ${maxDay.day} (${maxDay.total} min). 
-                Lowest: ${minDay.day} (${minDay.total} min). 
-                ${totalDuration > 120 ? "Consider reducing overall watering time." : "Schedule seems efficient."}`;
-        }
-    });
+                // Compare the current time with the last updated time
+                const timeDifference = (currentTime - lastUpdatedTime) / 1000; // Time difference in seconds
 
+                // Set device status based on time difference
+                if (timeDifference < 60) {
+                    // If the timestamp is within the last minute, show Online
+                    document.getElementById('device-status').innerText = data.status === "Online" ? "Online" : "Offline";
+                } else {
+                    // If the timestamp is older than 1 minute, show Offline
+                    document.getElementById('device-status').innerText = "Offline";
+                }
+
+                // Update last updated time on the page
+                document.getElementById('last-updated').innerText = "Last Updated: " + data.timestamp;
+            })
+            .catch(error => console.error('Error fetching data:', error));
+    }
+    // Fetch data every 60 seconds
+    setInterval(fetchSoilData, 20000);
+    fetchSoilData(); // Initial fetch
 </script>
 <?php include'includes/footer.php' ?>
 </body>
